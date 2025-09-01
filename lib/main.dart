@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:numerology/result_screen.dart';
 import 'package:numerology/themes.dart';
+import 'package:numerology/numerology_calc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,6 +30,8 @@ class InputScreen extends StatefulWidget {
 class _InputScreenState extends State<InputScreen> {
   final _nameController = TextEditingController();
   DateTime? _selectedDate;
+  final _calculator = NumerologyCalculator(); // 추가된 부분
+
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
