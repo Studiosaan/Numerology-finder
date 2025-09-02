@@ -160,21 +160,62 @@ class NumerologyCalculator {
   int calculateSoulUrgeNumber(String name) {
     int totalVowelValue = 0;
     for (int i = 0; i < name.length; i++) {
-      String char = name[i];
-      if (_isKoreanVowel(char)) {
-        totalVowelValue += _getKoreanCharValue(char);
+      String syllable = name[i];
+      
+      if (syllable.length != 1) continue;
+
+      int charCode = syllable.runes.first;
+
+      // 한글 음절이 아닌 경우 (단일 자모 등)
+      if (charCode < 0xAC00 || charCode > 0xD7A3) {
+        // 모음인지 확인하고 값 더하기
+        if (_isKoreanVowel(syllable)) {
+            totalVowelValue += _getDecomposedCharValue(syllable);
+        }
+        continue;
       }
+
+      int base = charCode - 0xAC00;
+      int jongseongIndex = base % 28;
+      int jungseongIndex = ((base - jongseongIndex) / 28).floor() % 21;
+      
+      String vowel = _jungseong[jungseongIndex];
+      totalVowelValue += _getDecomposedCharValue(vowel);
     }
     return totalVowelValue;
   }
 
-  // 성격수 계산 함수 (이름의 자음 합)
+    // 성격수 계산 함수 (이름의 자음 합)
   int calculatePersonalityNumber(String name) {
     int totalConsonantValue = 0;
     for (int i = 0; i < name.length; i++) {
-      String char = name[i];
-      if (_isKoreanConsonant(char)) {
-        totalConsonantValue += _getKoreanCharValue(char);
+      String syllable = name[i];
+
+      if (syllable.length != 1) continue;
+
+      int charCode = syllable.runes.first;
+
+      // 한글 음절이 아닌 경우 (단일 자모 등)
+      if (charCode < 0xAC00 || charCode > 0xD7A3) {
+        // 자음인지 확인하고 값 더하기
+        if (_isKoreanConsonant(syllable)) {
+          totalConsonantValue += _getDecomposedCharValue(syllable);
+        }
+        continue;
+      }
+
+      int base = charCode - 0xAC00;
+      int jongseongIndex = base % 28;
+      int choseongIndex = ((base - jongseongIndex) / 28 / 21).floor();
+
+      // 초성(자음) 값 더하기
+      String choseong = _choseong[choseongIndex];
+      totalConsonantValue += _getDecomposedCharValue(choseong);
+
+      // 종성(자음)이 있으면 값 더하기
+      if (jongseongIndex > 0) {
+        String jongseong = _jongseong[jongseongIndex];
+        totalConsonantValue += _getDecomposedCharValue(jongseong);
       }
     }
     return totalConsonantValue;
@@ -182,7 +223,9 @@ class NumerologyCalculator {
 
   // 완성수 계산 함수 (인생 여정 수 + 운명수)
   int calculateMaturityNumber(int lifePathNumber, int destinyNumber) {
-    return lifePathNumber + destinyNumber;
+    int reducedLifePath = reduceNumber(lifePathNumber);
+    int reducedDestiny = reduceNumber(destinyNumber);
+    return reducedLifePath + reducedDestiny;
   }
 
   // 생일수 계산 함수 (생일의 일자)
@@ -190,16 +233,29 @@ class NumerologyCalculator {
     return birthDate.day;
   }
 
+  // 숫자의 전체 축소 경로를 반환하는 헬퍼 함수
+  List<int> _getReductionPath(int number) {
+    List<int> path = [number];
+    String numStr = number.toString();
+
+    while (numStr.length > 1) {
+      int sum = 0;
+      for (int i = 0; i < numStr.length; i++) {
+        sum += int.parse(numStr[i]);
+      }
+      path.add(sum);
+      numStr = sum.toString();
+    }
+    return path;
+  }
+
   // 마스터 수를 고려한 텍스트 및 색상 처리 함수
   String getNumberText(int originalNumber) {
-    int reducedNumber = reduceNumber(originalNumber);
-    if (originalNumber == 11 || originalNumber == 22 || originalNumber == 33) {
-      return '$originalNumber/${reduceNumber(originalNumber)}';
-    } else if (originalNumber != reducedNumber) {
-      return '$originalNumber/$reducedNumber';
-    } else {
-      return '$originalNumber';
+    List<int> path = _getReductionPath(originalNumber);
+    if (path.length <= 1) {
+      return originalNumber.toString();
     }
+    return path.join('/');
   }
 
   Color getNumberColor(int number) {
