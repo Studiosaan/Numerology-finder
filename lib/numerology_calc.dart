@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 // 한글 자음을 숫자로 변환하는 맵
 const Map<String, int> _koreanConsonantToNumberMap = {
@@ -24,6 +23,12 @@ const Map<String, int> _koreanVowelToNumberMap = {
   'ㅏ': 1, 'ㅐ': 11, 'ㅑ': 2, 'ㅒ': 12, 'ㅓ': 3, 'ㅔ': 13, 'ㅕ': 4, 'ㅖ': 14, 'ㅗ': 5, 'ㅘ': 15, 'ㅙ': 16, 'ㅚ': 17,
   'ㅛ': 6, 'ㅜ': 7, 'ㅝ': 18, 'ㅞ': 19, 'ㅟ': 20, 'ㅠ': 8, 'ㅡ': 9, 'ㅢ': 21, 'ㅣ': 10,
 };
+
+// 한글 음절 분해를 위한 자모 배열
+const List<String> _choseong = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+const List<String> _jungseong = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
+const List<String> _jongseong = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+
 
 class NumerologyCalculator {
   // 숫자를 한 자리로 줄이는 핵심 함수 (마스터 수는 예외 처리)
@@ -74,9 +79,33 @@ class NumerologyCalculator {
     if (_koreanConsonantToNumberMap.containsKey(char)) return true;
     return false;
   }
+  
+  // 한글 음절을 분해하여 각 자모의 숫자 값을 합산하는 헬퍼 함수
+  int _getHangulSyllableValue(String syllable) {
+    if (syllable.length != 1) {
+      return 0;
+    }
+    int charCode = syllable.runes.first;
 
-  // ⭐️ 인생 여정 수 계산 함수
-  // 최종 합산된 값을 그대로 반환합니다.
+    if (charCode < 0xAC00 || charCode > 0xD7A3) {
+      return _getKoreanCharValue(syllable);
+    }
+
+    int base = charCode - 0xAC00;
+    int jongseongIndex = base % 28;
+    int jungseongIndex = ((base - jongseongIndex) / 28).floor() % 21;
+    int choseongIndex = ((base - jongseongIndex) / 28 / 21).floor();
+
+    int sum = 0;
+    sum += _getKoreanCharValue(_choseong[choseongIndex]);
+    sum += _getKoreanCharValue(_jungseong[jungseongIndex]);
+    if (jongseongIndex > 0) {
+      sum += _getKoreanCharValue(_jongseong[jongseongIndex]);
+    }
+    return sum;
+  }
+
+  // 인생 여정 수 계산 함수
   int calculateLifePathNumber(DateTime birthDate) {
     int month = birthDate.month;
     int day = birthDate.day;
@@ -86,18 +115,16 @@ class NumerologyCalculator {
     return totalSum;
   }
 
-  // ⭐️ 운명수 계산 함수
-  // 최종 합산된 값을 그대로 반환합니다.
+  // 운명수 계산 함수 (이름의 모든 글자 합)
   int calculateDestinyNumber(String name) {
     int totalValue = 0;
     for (int i = 0; i < name.length; i++) {
-      totalValue += _getKoreanCharValue(name[i]);
+      totalValue += _getHangulSyllableValue(name[i]);
     }
     return totalValue;
   }
 
-  // ⭐️ 혼의수 계산 함수
-  // 최종 합산된 값을 그대로 반환합니다.
+  // 혼의수 계산 함수 (이름의 모음 합)
   int calculateSoulUrgeNumber(String name) {
     int totalVowelValue = 0;
     for (int i = 0; i < name.length; i++) {
@@ -109,8 +136,7 @@ class NumerologyCalculator {
     return totalVowelValue;
   }
 
-  // ⭐️ 성격수 계산 함수
-  // 최종 합산된 값을 그대로 반환합니다.
+  // 성격수 계산 함수 (이름의 자음 합)
   int calculatePersonalityNumber(String name) {
     int totalConsonantValue = 0;
     for (int i = 0; i < name.length; i++) {
@@ -122,24 +148,22 @@ class NumerologyCalculator {
     return totalConsonantValue;
   }
 
-  // ⭐️ 완성수 계산 함수
-  // 최종 합산된 값을 그대로 반환합니다.
+  // 완성수 계산 함수 (인생 여정 수 + 운명수)
   int calculateMaturityNumber(int lifePathNumber, int destinyNumber) {
     return lifePathNumber + destinyNumber;
   }
 
-  // ⭐️ 생일수 계산 함수
-  // 최종 합산된 값을 그대로 반환합니다.
+  // 생일수 계산 함수 (생일의 일자)
   int calculateBirthdayNumber(DateTime birthDate) {
     return birthDate.day;
   }
 
-  // ⭐️ 수정된 getNumberText 함수
+  // 마스터 수를 고려한 텍스트 및 색상 처리 함수
   String getNumberText(int originalNumber) {
     int reducedNumber = reduceNumber(originalNumber);
     if (originalNumber == 11 || originalNumber == 22 || originalNumber == 33) {
       return '$originalNumber/${reduceNumber(originalNumber)}';
-    } else if (originalNumber != reducedNumber && reducedNumber != 0) {
+    } else if (originalNumber != reducedNumber) {
       return '$originalNumber/$reducedNumber';
     } else {
       return '$originalNumber';
