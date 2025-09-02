@@ -11,7 +11,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  ffi: ^2.1.0
+  sweph: ^2.10.3
+  another_flushbar: ^1.2.2
+  animated_theme_switcher: ^2.0.10
+  provider: ^6.1.2
+  google_fonts: ^6.1.0
+  http: ^1.2.2
+  intl: ^0.19.0
+  shared_preferences: ^2.0.0
+  table_calendar: ^3.1.0
   cupertino_icons: ^1.0.8
+  flutter_local_notifications: ^19.4.0 
+  url_launcher: ^6.0.0 
 
 dev_dependencies:
   flutter_test:
