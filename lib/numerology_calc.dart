@@ -155,7 +155,7 @@ class NumerologyCalculator {
     }
     return totalValue;
   }
-
+ 
   // 혼의수 계산 함수 (이름의 모음 합)
   int calculateSoulUrgeNumber(String name) {
     int totalVowelValue = 0;
