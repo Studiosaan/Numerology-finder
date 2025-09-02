@@ -39,16 +39,16 @@ class InfoScreen extends StatelessWidget {
               // 첫 번째 정보 카드: 앱을 만든 사람
               const InfoCard(
                 icon: Icons.people, // 사람 아이콘을 보여줘요.
-                title: '만든 사람들', // '우리는 누구인가요?'라는 제목을 보여줘요.
-                subtitle: '이 앱은 수비학에 관심이 많은 개인 개발자들에 의해 만들어졌습니다.', // 이 앱을 만든 사람에 대한 설명을 보여줘요.
+                title: '우리는 누구인가요', // '우리는 누구인가요?'라는 제목을 보여줘요.
+                subtitle: '• 아리온아인의 사명 : \n사자의 눈으로 세상을 헤아립니다', // 이 앱을 만든 사람에 대한 설명을 보여줘요.
                 iconColor: Colors.amber, // 아이콘 색깔을 호박색으로 정해요.
               ),
               const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
               // 두 번째 정보 카드: 앱이 유용한 사람
               const InfoCard(
                 icon: Icons.timer_sharp, // 시계 아이콘을 보여줘요.
-                title: '이 앱이 유용한 사람은?', // '이 앱이 유용한 사람은?'이라는 제목을 보여줘요.
-                subtitle: '수비학에 대해 궁금하거나, 자신과 타인의 성향을 숫자를 통해 이해하고 싶은 모든 분들에게 유용합니다.', // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
+                title: '누구에게 유용한가요?', // '이 앱이 유용한 사람은?'이라는 제목을 보여줘요.
+                subtitle: '• 수비학에 대해 궁금하거나, 자신과 타인의 성향을 숫자를 통해 이해하고 싶은 모든 분들', // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
                 iconColor: Colors.green, // 아이콘 색깔을 초록색으로 정해요.
               ),
               const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
@@ -56,7 +56,7 @@ class InfoScreen extends StatelessWidget {
               const InfoCard(
                 icon: Icons.app_shortcut, // 앱 아이콘을 보여줘요.
                 title: '왜 이 앱을 만들었나요?', // '왜 이 앱을 만들었나요?'라는 제목을 보여줘요.
-                subtitle: '복잡한 수비학 계산을 누구나 쉽고 재미있게 접근할 수 있도록 돕기 위해 만들었습니다.', // 이 앱을 만든 이유에 대한 설명을 보여줘요.
+                subtitle: '• 누구나 손쉽게 이 정보들에 접근 가능하면 좋겠다는 마음에', // 이 앱을 만든 이유에 대한 설명을 보여줘요.
                 iconColor: Colors.purple, // 아이콘 색깔을 보라색으로 정해요.
               ),
               const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
@@ -76,7 +76,7 @@ class InfoScreen extends StatelessWidget {
                   ],
                 ),
                 child: Text(
-                  '© 2025 Numerology Finder. All rights reserved.', // 저작권 글씨를 직접 사용해요.
+                  ' 2025 Arion Ayin. All rights reserved.', // 저작권 글씨를 직접 사용해요.
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7), // 글씨색을 살짝 흐리게 해요.
                     fontSize: 12, // 글씨 크기를 12로 작게 만들어요.

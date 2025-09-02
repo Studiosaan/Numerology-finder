@@ -10,7 +10,7 @@ class InfoCard extends StatelessWidget {
 
   // 카드를 만들 때 필요한 정보들을 꼭 받아야 해요.
   const InfoCard({
-    super.key,
+    super.key, // 위젯을 만들 때 필요한 기본 정보예요.
     required this.icon, // 아이콘은 꼭 필요해요.
     required this.title, // 제목도 꼭 필요해요.
     required this.subtitle, // 부제목도 꼭 필요해요.
@@ -78,3 +78,4 @@ class InfoCard extends StatelessWidget {
     );
   }
 }
+
