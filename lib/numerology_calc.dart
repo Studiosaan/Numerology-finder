@@ -29,6 +29,19 @@ const List<String> _choseong = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ',
 const List<String> _jungseong = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
 const List<String> _jongseong = ['', 'ㄱ', 'ㄲ', 'ㄳ', 'ㄴ', 'ㄵ', 'ㄶ', 'ㄷ', 'ㄹ', 'ㄺ', 'ㄻ', 'ㄼ', 'ㄽ', 'ㄾ', 'ㄿ', 'ㅀ', 'ㅁ', 'ㅂ', 'ㅄ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
 
+// 복합 자모 분해 맵
+const Map<String, List<String>> _compositeVowels = {
+  'ㅘ': ['ㅗ', 'ㅏ'], 'ㅙ': ['ㅗ', 'ㅐ'], 'ㅚ': ['ㅗ', 'ㅣ'],
+  'ㅝ': ['ㅜ', 'ㅓ'], 'ㅞ': ['ㅜ', 'ㅔ'], 'ㅟ': ['ㅜ', 'ㅣ'],
+  'ㅢ': ['ㅡ', 'ㅣ'],
+};
+const Map<String, List<String>> _compositeConsonants = {
+  'ㄳ': ['ㄱ', 'ㅅ'], 'ㄵ': ['ㄴ', 'ㅈ'], 'ㄶ': ['ㄴ', 'ㅎ'],
+  'ㄺ': ['ㄹ', 'ㄱ'], 'ㄻ': ['ㄹ', 'ㅁ'], 'ㄼ': ['ㄹ', 'ㅂ'],
+  'ㄽ': ['ㄹ', 'ㅅ'], 'ㄾ': ['ㄹ', 'ㅌ'], 'ㄿ': ['ㄹ', 'ㅍ'],
+  'ㅀ': ['ㄹ', 'ㅎ'], 'ㅄ': ['ㅂ', 'ㅅ'],
+};
+
 
 class NumerologyCalculator {
   // 숫자를 한 자리로 줄이는 핵심 함수 (마스터 수는 예외 처리)
@@ -68,6 +81,25 @@ class NumerologyCalculator {
     return 0; // 한글이 아닌 문자
   }
 
+  // 복합 자모를 분해하여 숫자 값을 합산하는 헬퍼 함수
+  int _getDecomposedCharValue(String char) {
+    if (_compositeVowels.containsKey(char)) {
+      int sum = 0;
+      for (String c in _compositeVowels[char]!) {
+        sum += _getKoreanCharValue(c);
+      }
+      return sum;
+    }
+    if (_compositeConsonants.containsKey(char)) {
+      int sum = 0;
+      for (String c in _compositeConsonants[char]!) {
+        sum += _getKoreanCharValue(c);
+      }
+      return sum;
+    }
+    return _getKoreanCharValue(char);
+  }
+
   // Helper function to check if a character is a Korean vowel
   bool _isKoreanVowel(String char) {
     if (_koreanVowelToNumberMap.containsKey(char)) return true;
@@ -88,7 +120,7 @@ class NumerologyCalculator {
     int charCode = syllable.runes.first;
 
     if (charCode < 0xAC00 || charCode > 0xD7A3) {
-      return _getKoreanCharValue(syllable);
+      return _getDecomposedCharValue(syllable);
     }
 
     int base = charCode - 0xAC00;
@@ -97,10 +129,10 @@ class NumerologyCalculator {
     int choseongIndex = ((base - jongseongIndex) / 28 / 21).floor();
 
     int sum = 0;
-    sum += _getKoreanCharValue(_choseong[choseongIndex]);
-    sum += _getKoreanCharValue(_jungseong[jungseongIndex]);
+    sum += _getDecomposedCharValue(_choseong[choseongIndex]);
+    sum += _getDecomposedCharValue(_jungseong[jungseongIndex]);
     if (jongseongIndex > 0) {
-      sum += _getKoreanCharValue(_jongseong[jongseongIndex]);
+      sum += _getDecomposedCharValue(_jongseong[jongseongIndex]);
     }
     return sum;
   }
@@ -111,7 +143,7 @@ class NumerologyCalculator {
     int day = birthDate.day;
     int year = birthDate.year;
 
-    int totalSum = _sumDigits(month) + _sumDigits(day) + _sumDigits(year);
+    int totalSum = month + day + _sumDigits(year);
     return totalSum;
   }
 
