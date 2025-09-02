@@ -1,4 +1,4 @@
-package com.example.dd
+package com.numerology.finder
 
 import io.flutter.embedding.android.FlutterActivity
 
