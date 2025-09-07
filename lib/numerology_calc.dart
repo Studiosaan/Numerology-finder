@@ -254,15 +254,12 @@ class NumerologyCalculator {
       return originalNumber.toString();
     }
 
-    // 마스터 넘버(11, 22, 33)가 아닌 경우, 첫 번째 숫자를 제외한 축소 경로를 표시합니다.
-    // 예: 38 -> [38, 11, 2] -> "11/2"
-    // 예: 10 -> [10, 1] -> "1"
-    if (originalNumber != 11 && originalNumber != 22 && originalNumber != 33) {
+    // 경로가 3개 이상일 경우(예: 38 -> 11 -> 2), 첫 숫자를 제외하고 보여줍니다. (11/2)
+    if (path.length >= 3) {
       return path.sublist(1).join('/');
     }
 
-    // 마스터 넘버인 경우, 전체 경로를 표시합니다.
-    // 예: 11 -> [11, 2] -> "11/2"
+    // 경로가 2개일 경우(예: 23 -> 5), 전체 경로를 그대로 보여줍니다. (23/5)
     return path.join('/');
   }
 
