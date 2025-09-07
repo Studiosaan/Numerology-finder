@@ -223,9 +223,7 @@ class NumerologyCalculator {
 
   // 완성수 계산 함수 (인생 여정 수 + 운명수)
   int calculateMaturityNumber(int lifePathNumber, int destinyNumber) {
-    int reducedLifePath = reduceNumber(lifePathNumber);
-    int reducedDestiny = reduceNumber(destinyNumber);
-    return reducedLifePath + reducedDestiny;
+    return lifePathNumber + destinyNumber;
   }
 
   // 생일수 계산 함수 (생일의 일자)
@@ -255,6 +253,16 @@ class NumerologyCalculator {
     if (path.length <= 1) {
       return originalNumber.toString();
     }
+
+    // 마스터 넘버(11, 22, 33)가 아닌 경우, 첫 번째 숫자를 제외한 축소 경로를 표시합니다.
+    // 예: 38 -> [38, 11, 2] -> "11/2"
+    // 예: 10 -> [10, 1] -> "1"
+    if (originalNumber != 11 && originalNumber != 22 && originalNumber != 33) {
+      return path.sublist(1).join('/');
+    }
+
+    // 마스터 넘버인 경우, 전체 경로를 표시합니다.
+    // 예: 11 -> [11, 2] -> "11/2"
     return path.join('/');
   }
 
