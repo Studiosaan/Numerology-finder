@@ -2,6 +2,7 @@
 // 앱을 만든 사람, 앱이 유용한 사람, 앱을 만든 이유 등 여러 정보를 보여주는 화면이에요.
 
 import 'package:flutter/material.dart'; // Flutter 앱의 기본 위젯들을 가져와요.
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 앱의 다국어 문자열을 가져와요.
 import '../widgets/info_card.dart'; // 정보 화면에 보이는 카드 모양 위젯을 가져와요.
 
 // 정보 화면을 보여주는 위젯이에요.
@@ -37,26 +38,26 @@ class InfoScreen extends StatelessWidget {
             // 카드들을 위에서 아래로 차례대로 쌓을 거예요.
             children: [
               // 첫 번째 정보 카드: 앱을 만든 사람
-              const InfoCard(
+              InfoCard(
                 icon: Icons.people, // 사람 아이콘을 보여줘요.
-                title: '우리는 누구인가요', // '우리는 누구인가요?'라는 제목을 보여줘요.
-                subtitle: '• 아리온아인의 사명 : \n사자의 눈으로 세상을 헤아립니다', // 이 앱을 만든 사람에 대한 설명을 보여줘요.
+                title: AppLocalizations.of(context)!.whoAreWeTitle, // '우리는 누구인가요?'라는 제목을 보여줘요.
+                subtitle: AppLocalizations.of(context)!.whoAreWeSubtitle, // 이 앱을 만든 사람에 대한 설명을 보여줘요.
                 iconColor: Colors.amber, // 아이콘 색깔을 호박색으로 정해요.
               ),
               const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
               // 두 번째 정보 카드: 앱이 유용한 사람
-              const InfoCard(
+              InfoCard(
                 icon: Icons.timer_sharp, // 시계 아이콘을 보여줘요.
-                title: '누구에게 유용한가요?', // '이 앱이 유용한 사람은?'이라는 제목을 보여줘요.
-                subtitle: '• 수비학에 대해 궁금하거나, 자신과 타인의 성향을 숫자를 통해 이해하고 싶은 모든 분들', // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
+                title: AppLocalizations.of(context)!.whoIsItUsefulForTitle, // '이 앱이 유용한 사람은?'이라는 제목을 보여줘요.
+                subtitle: AppLocalizations.of(context)!.whoIsItUsefulForSubtitle, // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
                 iconColor: Colors.green, // 아이콘 색깔을 초록색으로 정해요.
               ),
               const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
               // 세 번째 정보 카드: 앱을 만든 이유
-              const InfoCard(
+              InfoCard(
                 icon: Icons.app_shortcut, // 앱 아이콘을 보여줘요.
-                title: '왜 이 앱을 만들었나요?', // '왜 이 앱을 만들었나요?'라는 제목을 보여줘요.
-                subtitle: '• 누구나 손쉽게 이 정보들에 접근 가능하면 좋겠다는 마음에', // 이 앱을 만든 이유에 대한 설명을 보여줘요.
+                title: AppLocalizations.of(context)!.whyDidWeMakeThisAppTitle, // '왜 이 앱을 만들었나요?'라는 제목을 보여줘요.
+                subtitle: AppLocalizations.of(context)!.whyDidWeMakeThisAppSubtitle, // 이 앱을 만든 이유에 대한 설명을 보여줘요.
                 iconColor: Colors.purple, // 아이콘 색깔을 보라색으로 정해요.
               ),
               const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
@@ -76,7 +77,7 @@ class InfoScreen extends StatelessWidget {
                   ],
                 ),
                 child: Text(
-                  ' 2025 Arion Ayin. All rights reserved.', // 저작권 글씨를 직접 사용해요.
+                  AppLocalizations.of(context)!.copyrightText, // 저작권 글씨를 직접 사용해요.
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7), // 글씨색을 살짝 흐리게 해요.
                     fontSize: 12, // 글씨 크기를 12로 작게 만들어요.

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:numerology/numerology_calc.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ResultScreen extends StatelessWidget {
   final String name;
@@ -18,27 +19,32 @@ class ResultScreen extends StatelessWidget {
     final int personalityNumber = calculator.calculatePersonalityNumber(name);
     final int maturityNumber = calculator.calculateMaturityNumber(lifePathNumber, destinyNumber);
     final int birthdayNumber = calculator.calculateBirthdayNumber(birthDate);
+    final int personalYearNumber = calculator.calculatePersonalYearNumber(birthDate);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text('Name: $name', style: Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.name} : $name', style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: 10),
-          Text('Birth Date: ${birthDate.toLocal().toString().split(' ')[0]}', style: Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.birthDate} : ${birthDate.toLocal().toString().split(' ')[0]}', style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: 20),
           Text(
-            'Your Numerology Result:',
+            AppLocalizations.of(context)!.yourNumerologyResult,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 10), // Add some space
-          Text('Life Path Number: ${calculator.getNumberText(lifePathNumber)}', style: Theme.of(context).textTheme.bodyLarge),
-          Text('Destiny Number: ${calculator.getNumberText(destinyNumber)}', style: Theme.of(context).textTheme.bodyLarge),
-          Text('Soul Urge Number: ${calculator.getNumberText(soulUrgeNumber)}', style: Theme.of(context).textTheme.bodyLarge),
-          Text('Personality Number: ${calculator.getNumberText(personalityNumber)}', style: Theme.of(context).textTheme.bodyLarge),
-          Text('Maturity Number: ${calculator.getNumberText(maturityNumber)}', style: Theme.of(context).textTheme.bodyLarge),
-          Text('Birthday Number: ${calculator.getNumberText(birthdayNumber)}', style: Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.lifePathNumber} ${calculator.getNumberText(lifePathNumber)}',style : Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.destinyNumber} ${calculator.getNumberText(destinyNumber)}',style : Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.soulUrgeNumber} ${calculator.getNumberText(soulUrgeNumber)}',style : Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.personalityNumber} ${calculator.getNumberText(personalityNumber)}',style : Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.maturityNumber} ${calculator.getNumberText(maturityNumber)}',style : Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.birthdayNumber} ${calculator.getNumberText(birthdayNumber)}',style : Theme.of(context).textTheme.bodyLarge),
+          const SizedBox(height: 10),
+          const Divider(),
+          const SizedBox(height: 10),
+          Text('${AppLocalizations.of(context)!.personalYearNumber} ${calculator.reduceNumber(personalYearNumber)}', style: Theme.of(context).textTheme.bodyLarge),
         ],
       ),
     );

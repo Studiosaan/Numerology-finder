@@ -6,6 +6,7 @@ class SettingCard extends StatelessWidget {
   final String title; // 카드의 제목
   final Widget trailing; // 카드 오른쪽에 보여줄 위젯 (스위치, 버튼 등)
   final Color iconColor; // 아이콘의 색깔
+  final VoidCallback? onTap; // 카드를 눌렀을 때 실행할 함수
 
   // 카드를 만들 때 필요한 정보들을 꼭 받아야 해요.
   const SettingCard({
@@ -14,6 +15,7 @@ class SettingCard extends StatelessWidget {
     required this.title, // 제목도 꼭 필요해요.
     required this.trailing, // 오른쪽 위젯도 꼭 필요해요.
     required this.iconColor, // 아이콘 색깔도 꼭 필요해요.
+    this.onTap, // 탭 이벤트는 선택 사항이에요.
   });
 
   @override
@@ -47,6 +49,7 @@ class SettingCard extends StatelessWidget {
       ),
       // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
       child: ListTile(
+        onTap: onTap, // 탭 이벤트를 처리해요.
         contentPadding: const EdgeInsets.all(20), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
         // 왼쪽에 동그란 배경을 가진 아이콘을 보여줘요.
         leading: CircleAvatar(

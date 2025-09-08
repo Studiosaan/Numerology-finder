@@ -221,15 +221,23 @@ class NumerologyCalculator {
     return totalConsonantValue;
   }
 
-  // 완성수 계산 함수 (인생 여정 수 + 운명수)
-  int calculateMaturityNumber(int lifePathNumber, int destinyNumber) {
-    return lifePathNumber + destinyNumber;
-  }
+        // 완성수 계산 함수 (인생 여정 수 + 운명수)
+      int calculateMaturityNumber(int lifePathNumber, int destinyNumber) {
+        final reducedLifePath = reduceNumber(lifePathNumber);
+        final reducedDestiny = reduceNumber(destinyNumber);
+        return reducedLifePath + reducedDestiny;
+      }
 
-  // 생일수 계산 함수 (생일의 일자)
-  int calculateBirthdayNumber(DateTime birthDate) {
-    return birthDate.day;
-  }
+      // 1년수 계산 함수 (생월 + 생일 + 금년)
+      int calculatePersonalYearNumber(DateTime birthDate) {
+        final int currentYear = DateTime.now().year;
+        return birthDate.month + birthDate.day + _sumDigits(currentYear);
+      }
+
+      // 생일수 계산 함수 (생일의 일자)
+      int calculateBirthdayNumber(DateTime birthDate) {
+        return birthDate.day;
+      }
 
   // 숫자의 전체 축소 경로를 반환하는 헬퍼 함수
   List<int> _getReductionPath(int number) {
