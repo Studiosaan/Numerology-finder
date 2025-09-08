@@ -1,4 +1,4 @@
-package com.numerology.finder
+package com.numerology.finderapp
 
 import io.flutter.embedding.android.FlutterActivity
 
