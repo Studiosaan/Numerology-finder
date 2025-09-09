@@ -60,6 +60,20 @@ class NumerologyCalculator {
     }
     return int.parse(numStr);
   }
+
+  // 모든 숫자를 한 자리로 줄이는 함수 (마스터 수 예외 없음)
+  int _reduceToSingleDigit(int number) {
+    int sum = 0;
+    String numStr = number.toString();
+    while (numStr.length > 1) {
+      sum = 0;
+      for (int i = 0; i < numStr.length; i++) {
+        sum += int.parse(numStr[i]);
+      }
+      numStr = sum.toString();
+    }
+    return int.parse(numStr);
+  }
   
   // 생년월일의 각 자리를 더하는 함수
   int _sumDigits(int number) {
@@ -223,15 +237,16 @@ class NumerologyCalculator {
 
         // 완성수 계산 함수 (인생 여정 수 + 운명수)
       int calculateMaturityNumber(int lifePathNumber, int destinyNumber) {
-        final reducedLifePath = reduceNumber(lifePathNumber);
-        final reducedDestiny = reduceNumber(destinyNumber);
-        return reducedLifePath + reducedDestiny;
+        final finalLifePath = _reduceToSingleDigit(lifePathNumber);
+        final finalDestiny = _reduceToSingleDigit(destinyNumber);
+        return finalLifePath + finalDestiny;
       }
 
       // 1년수 계산 함수 (생월 + 생일 + 금년)
       int calculatePersonalYearNumber(DateTime birthDate) {
         final int currentYear = DateTime.now().year;
-        return birthDate.month + birthDate.day + _sumDigits(currentYear);
+        int initialSum = birthDate.month + birthDate.day + _sumDigits(currentYear);
+        return _reduceToSingleDigit(initialSum);
       }
 
       // 생일수 계산 함수 (생일의 일자)
