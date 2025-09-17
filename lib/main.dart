@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
         // 앱의 기본 틀을 만들어요. (제목, 테마, 첫 화면 등)
         return MaterialApp(
           // 앱의 제목을 'Numerology'라고 정해요.
-          title: 'Numerology',
+          title: '수비학 계산기',
           // 앱의 밝은 모드 테마는 'themes.dart' 파일에 있는 'numerologyTheme'을 사용해요.
           theme: numerologyTheme,
           // 앱의 어두운 모드 테마는 'themes.dart' 파일에 있는 'numerologyDarkTheme'을 사용해요.
