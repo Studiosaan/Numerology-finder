@@ -12,9 +12,12 @@ import 'package:numerology/widgets/custom_app_screen.dart'; // 앱의 기본 틀
 import 'package:shared_preferences/shared_preferences.dart'; // 앱을 껐다 켜도 정보를 기억하게 해주는 도구예요.
 import 'package:provider/provider.dart'; // 앱의 중요한 정보(테마 같은 것)를 여러 화면에서 함께 쓸 수 있게 도와주는 도구예요.
 import 'package:numerology/theme_provider.dart'; // 앱의 테마(밝은 모드, 어두운 모드)를 관리하는 특별한 도구를 가져와요.
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 // 앱이 처음 시작될 때 가장 먼저 실행되는 부분이에요.
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   // 앱을 화면에 보여줘요.
   runApp(
     // 여러 Provider를 함께 사용할 수 있게 해주는 MultiProvider를 사용해요.
@@ -96,12 +99,63 @@ class _InputScreenState extends State<InputScreen> {
   bool _showResults = false;
   // 이전에 입력했던 이름과 날짜들을 저장하는 목록이에요. (최근 20개)
   List<Map<String, String>> _history = [];
+  InterstitialAd? _interstitialAd;
+  int _calculateClickCount = 0;
 
   // 이 화면이 처음 만들어질 때 딱 한 번 실행되는 부분이에요.
   @override
   void initState() {
     super.initState(); // 부모 위젯의 시작 부분도 실행해줘요.
     _loadHistory(); // 앱을 껐다 켜도 기억하고 있는 이전 기록들을 불러와요.
+    _loadCalculateClickCount();
+    _loadInterstitialAd();
+  }
+
+  @override
+  void dispose() {
+    _interstitialAd?.dispose();
+    super.dispose();
+  }
+
+  void _loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: 'ca-app-pub-7332476431820224/9337504089',
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              _showResultScreenAfterAd();
+              ad.dispose();
+              _loadInterstitialAd();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              _showResultScreenAfterAd();
+              ad.dispose();
+              _loadInterstitialAd();
+            },
+          );
+        },
+        onAdFailedToLoad: (error) {
+          // Handle the error
+        },
+      ),
+    );
+  }
+
+  void _showResultScreenAfterAd() {
+    setState(() {
+      _showResults = true;
+    });
+    _saveHistory();
+  }
+
+  Future<void> _loadCalculateClickCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _calculateClickCount = prefs.getInt('calculateClickCount') ?? 0;
+    });
   }
 
   // 앱을 껐다 켜도 기억하고 있는 이전 기록들을 불러오는 함수예요.
@@ -169,15 +223,18 @@ class _InputScreenState extends State<InputScreen> {
   }
 
   // 'Calculate' 버튼을 눌렀을 때 실행되는 함수예요.
-  void _calculate() {
+  void _calculate() async {
     // 이름 칸이 비어있지 않고, 날짜도 선택되어 있으면
     if (_nameController.text.isNotEmpty && _selectedDate != null) {
-      // 화면의 내용을 바꿔줘요.
-      setState(() {
-        // 계산 결과를 보여주도록 스위치를 켜요.
-        _showResults = true;
-      });
-      _saveHistory(); // 현재 입력된 이름과 날짜를 기록으로 저장해요.
+      final prefs = await SharedPreferences.getInstance();
+      _calculateClickCount = (prefs.getInt('calculateClickCount') ?? 0) + 1;
+      await prefs.setInt('calculateClickCount', _calculateClickCount);
+
+      if (_calculateClickCount % 5 == 0 && _interstitialAd != null) {
+        _interstitialAd!.show();
+      } else {
+        _showResultScreenAfterAd();
+      }
     } else {
       // 이름이나 날짜가 입력되지 않았으면 작은 알림 메시지를 화면 아래에 보여줘요.
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,12 +1,12 @@
 name: numerology
 description: "A new Flutter project."
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: 'none'
 
-version: 1.0.7+7
+version: 1.1.1+4
 
 environment:
-  sdk: ^3.7.2
+  sdk: '>=3.7.2 <4.0.0' # SDK 버전 수정
 
 dependencies:
   flutter:
@@ -26,12 +26,17 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_local_notifications: ^19.4.0 
   url_launcher: ^6.0.0 
+  google_mobile_ads: ^6.0.0 
 
 dev_dependencies:
   flutter_test:
-   sdk: flutter
-
+    sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: "^0.13.1" # 여기에 추가
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/512_512.png" # 이미지의 실제
 
 flutter:
   uses-material-design: true

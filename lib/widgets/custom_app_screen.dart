@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:numerology/screens/info_screen.dart';
 import 'package:numerology/screens/setting_screen.dart';
 
@@ -18,6 +19,38 @@ class CustomAppScreen extends StatefulWidget {
 
 class _CustomAppScreenState extends State<CustomAppScreen> {
   int _selectedIndex = 0;
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: 'ca-app-pub-7332476431820224/7832850720', // 실제 광고 ID
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -65,22 +98,34 @@ class _CustomAppScreenState extends State<CustomAppScreen> {
           foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
           elevation: Theme.of(context).appBarTheme.elevation,
         ),
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Theme.of(context).colorScheme.background,
-                Theme.of(context).colorScheme.surface,
-              ],
+        body: Column(
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Theme.of(context).colorScheme.background,
+                      Theme.of(context).colorScheme.surface,
+                    ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: _widgetOptions.elementAt(_selectedIndex),
+                ),
+              ),
             ),
-          ),
-          child: SafeArea(
-            child: _widgetOptions.elementAt(_selectedIndex),
-          ),
+            if (_isBannerAdLoaded)
+              SizedBox(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+          ],
         ),
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
