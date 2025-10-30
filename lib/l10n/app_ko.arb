@@ -17,6 +17,7 @@
     "maturityNumber": "완성 수 :",
     "birthdayNumber": "생일 수 :",
     "personalYearNumber": "1년수 :",
+    "personalMonthNumber": "1달수 :",
     "back": "뒤로",
     "calculate": "계산",
     "reset": "초기화",

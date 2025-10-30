@@ -17,6 +17,7 @@
     "maturityNumber": "Maturity Number :",
     "birthdayNumber": "Birthday Number :",
     "personalYearNumber": "Personal Year Number :",
+    "personalMonthNumber": "Personal Month Number :",
     "back": "Back",
     "calculate": "Calculate",
     "reset": "Reset",

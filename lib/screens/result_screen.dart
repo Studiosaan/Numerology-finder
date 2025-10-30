@@ -20,6 +20,7 @@ class ResultScreen extends StatelessWidget {
     final int maturityNumber = calculator.calculateMaturityNumber(lifePathNumber, destinyNumber);
     final int birthdayNumber = calculator.calculateBirthdayNumber(birthDate);
     final int personalYearNumber = calculator.calculatePersonalYearNumber(birthDate);
+    final int personalMonthNumber = calculator.calculatePersonalMonthNumber(personalYearNumber);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -45,6 +46,7 @@ class ResultScreen extends StatelessWidget {
           const Divider(),
           const SizedBox(height: 10),
           Text('${AppLocalizations.of(context)!.personalYearNumber} ${calculator.reduceNumber(personalYearNumber)}', style: Theme.of(context).textTheme.bodyLarge),
+          Text('${AppLocalizations.of(context)!.personalMonthNumber} ${calculator.reduceNumber(personalYearNumber)}', style: Theme.of(context).textTheme.bodyLarge),
         ],
       ),
     );

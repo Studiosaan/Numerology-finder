@@ -230,7 +230,7 @@ class _InputScreenState extends State<InputScreen> {
       _calculateClickCount = (prefs.getInt('calculateClickCount') ?? 0) + 1;
       await prefs.setInt('calculateClickCount', _calculateClickCount);
 
-      if (_calculateClickCount % 5 == 0 && _interstitialAd != null) {
+      if (_calculateClickCount % 15 == 0 && _interstitialAd != null) {
         _interstitialAd!.show();
       } else {
         _showResultScreenAfterAd();

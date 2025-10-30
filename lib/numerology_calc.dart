@@ -249,6 +249,13 @@ class NumerologyCalculator {
         return _reduceToSingleDigit(initialSum);
       }
 
+      // 1달수 계산 함수 (1년수 + 현재 월)
+      int calculatePersonalMonthNumber(int personalYearNumber) {
+        final int currentMonth = DateTime.now().month;
+        int initialSum = personalYearNumber + currentMonth;
+        return _reduceToSingleDigit(initialSum);
+      }
+
       // 생일수 계산 함수 (생일의 일자)
       int calculateBirthdayNumber(DateTime birthDate) {
         return birthDate.day;

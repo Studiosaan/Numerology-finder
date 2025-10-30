@@ -3,7 +3,7 @@ description: "A new Flutter project."
 
 publish_to: 'none'
 
-version: 1.1.1+5
+version: 1.1.1+20
 
 environment:
   sdk: '>=3.7.2 <4.0.0' # SDK 버전 수정
@@ -26,7 +26,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_local_notifications: ^19.4.0 
   url_launcher: ^6.0.0 
-  google_mobile_ads: ^6.0.0 
+  google_mobile_ads: ^6.0.0
+  upgrader: ^12.2.0
 
 dev_dependencies:
   flutter_test:
