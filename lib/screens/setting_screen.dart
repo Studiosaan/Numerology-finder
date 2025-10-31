@@ -1,6 +1,7 @@
 // 이 파일은 앱의 '설정' 화면을 만드는 코드예요.
 // 여기서 앱의 여러 가지 설정을 바꿀 수 있어요.
 import 'package:flutter/material.dart'; // Flutter 앱을 만드는 데 필요한 기본 도구들을 가져와요.
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart'; // 앱의 중요한 정보(테마 같은 것)를 여러 화면에서 함께 쓸 수 있게 도와주는 도구예요.
 import 'package:numerology/theme_provider.dart'; // 앱의 테마(밝은 모드, 어두운 모드)를 관리하는 특별한 도구를 가져와요.
 import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 앱의 다국어 문자열을 가져와요.
@@ -9,49 +10,83 @@ import 'package:numerology/widgets/setting_card.dart'; // 설정 화면에 들�
 import 'package:url_launcher/url_launcher.dart'; // 웹사이트나 이메일 앱을 열어주는 라이브러리예요.
 
 // '설정' 화면을 보여주는 위젯이에요.
-// 이 화면은 스스로 변하는 부분이 없어서 'StatelessWidget'으로 만들었어요.
-class SettingScreen extends StatelessWidget {
-  // 'SettingScreen' 위젯을 만들 때 필요한 기본 정보예요.
+class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
 
-Future<void> _showUrlConfirmationDialog(
-    BuildContext context, {
-    required String url,
-    required String serviceNameKo,
-    required String serviceNameEn,
-  }) async {
+  @override
+  State<SettingScreen> createState() => _SettingScreenState();
+}
+
+class _SettingScreenState extends State<SettingScreen> {
+  NativeAd? _nativeAd;
+  bool _isNativeAdLoaded = false;
+  final String _nativeAdUnitId = 'ca-app-pub-7332476431820224/5792684086';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNativeAd();
+  }
+
+  @override
+  void dispose() {
+    _nativeAd?.dispose();
+    super.dispose();
+  }
+
+  void _loadNativeAd() {
+    _nativeAd = NativeAd(
+      adUnitId: _nativeAdUnitId,
+      request: const AdRequest(),
+      listener: NativeAdListener(
+        onAdLoaded: (Ad ad) {
+          setState(() {
+            _isNativeAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          ad.dispose();
+          print('Native ad failed to load: $error');
+        },
+      ),
+      nativeTemplateStyle: NativeTemplateStyle(
+        templateType: TemplateType.medium,
+      ),
+    )..load();
+  }
+
+  Future<void> _showAdAndNavigate(String url) async {
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     final isKorean = localeProvider.locale?.languageCode == 'ko';
-
-    final String title = isKorean ? '$serviceNameKo로 이동' : 'Go to $serviceNameEn';
-    final String content = isKorean
-        ? '$serviceNameKo(으)로 이동하시겠습니까?' // (조사 '으' 추가)
-        : 'Do you want to go to $serviceNameEn?';
-    final String yesButton = isKorean ? '예' : 'Yes';
-    final String noButton = isKorean ? '아니오' : 'No';
 
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(title),
-          content: Text(content),
+          title: Text(isKorean ? '커뮤니티로 이동' : 'Go to Community'),
+          content: (_isNativeAdLoaded && _nativeAd != null)
+              ? ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 300,
+                  ),
+                  child: AdWidget(ad: _nativeAd!),
+                )
+              : const SizedBox.shrink(),
           actions: <Widget>[
             TextButton(
-              child: Text(noButton),
+              child: Text(isKorean ? '취소' : 'Cancel'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text(yesButton),
+              child: Text(isKorean ? '이동' : 'Go'),
               onPressed: () async {
                 Navigator.of(context).pop();
                 final Uri uri = Uri.parse(url);
                 if (await canLaunchUrl(uri)) {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                 } else {
-                  // URL을 열 수 없을 때 화면 아래에 알림 메시지를 띄워줘요.
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -67,7 +102,6 @@ Future<void> _showUrlConfirmationDialog(
       },
     );
   }
-
 
   // 이 함수는 화면에 무엇을 그릴지 정해줘요.
   @override
@@ -145,18 +179,10 @@ Future<void> _showUrlConfirmationDialog(
                   color: Colors.grey,
                 ),
                 onPressed: () {
-                  // 버튼을 누르면 기존에 만드신 확인 대화상자를 띄웁니다.
-                  _showUrlConfirmationDialog(
-                    context,
-                    url: 'https://cafe.naver.com/shootingstarter',
-                    serviceNameKo: '네이버 카페',
-                    serviceNameEn: 'Naver Cafe',
-                  );
+                  _showAdAndNavigate('https://cafe.naver.com/shootingstarter');
                 },
               ),
             ),
-
-
         ],
       ),
     );

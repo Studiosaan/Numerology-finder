@@ -8,6 +8,7 @@ class AdService {
   final int _adFrequency = 7; // 광고 표시 빈도 (7번 클릭마다)
 
   static const _clickCountKey = 'calculateClickCount';
+  static const _lastSplashAdShowTimeKey = 'lastSplashAdShowTime';
 
   /// 서비스 초기화 시 광고와 클릭 횟수를 로드합니다.
   Future<void> initialize() async {
@@ -63,12 +64,26 @@ class AdService {
     required Function onAdDismissed,
     required Function onAdFailed,
   }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastAdShowTimeMillis = prefs.getInt(_lastSplashAdShowTimeKey) ?? 0;
+    final currentTimeMillis = DateTime.now().millisecondsSinceEpoch;
+
+    // 30분 (밀리초 단위)
+    const thirtyMinutesInMillis = 30 * 60 * 1000;
+
+    if (currentTimeMillis - lastAdShowTimeMillis < thirtyMinutesInMillis) {
+      onAdFailed(); // 30분 이내에는 광고를 보여주지 않음
+      return;
+    }
+
     InterstitialAd? splashAd;
     await InterstitialAd.load(
       adUnitId: adUnitId,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
+        onAdLoaded: (ad) async {
+          // 광고가 성공적으로 로드되면, 현재 시간을 저장
+          await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
           splashAd = ad;
           splashAd!.fullScreenContentCallback = FullScreenContentCallback(
             onAdDismissedFullScreenContent: (ad) {
