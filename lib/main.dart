@@ -1,7 +1,5 @@
 // 이 파일은 앱의 가장 중요한 부분이에요. 앱이 어떻게 시작되고, 어떤 화면들을 보여줄지 정해요.
 
-import 'dart:convert'; // 글자를 컴퓨터가 알아들을 수 있는 형태로 바꾸는 도구예요.
-
 import 'package:flutter/material.dart'; // Flutter 앱을 만드는 데 필요한 기본 도구들을 가져와요.
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -9,10 +7,11 @@ import 'package:numerology/locale_provider.dart';
 import 'package:numerology/screens/result_screen.dart'; // 계산 결과를 보여주는 화면 코드를 가져와요.
 import 'package:numerology/themes.dart'; // 앱의 색깔과 글씨 모양을 정하는 코드들을 가져와요.
 import 'package:numerology/widgets/custom_app_screen.dart'; // 앱의 기본 틀(아래쪽 메뉴바 같은 것)을 만드는 코드를 가져와요.
-import 'package:shared_preferences/shared_preferences.dart'; // 앱을 껐다 켜도 정보를 기억하게 해주는 도구예요.
 import 'package:provider/provider.dart'; // 앱의 중요한 정보(테마 같은 것)를 여러 화면에서 함께 쓸 수 있게 도와주는 도구예요.
 import 'package:numerology/theme_provider.dart'; // 앱의 테마(밝은 모드, 어두운 모드)를 관리하는 특별한 도구를 가져와요.
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:numerology/services/ad_service.dart';
+import 'package:numerology/services/history_service.dart';
 
 // 앱이 처음 시작될 때 가장 먼저 실행되는 부분이에요.
 void main() {
@@ -27,6 +26,8 @@ void main() {
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         // 'LocaleProvider'라는 도구를 앱 전체에서 사용할 수 있게 해줘요.
         ChangeNotifierProvider(create: (context) => LocaleProvider()),
+        // 'HistoryService'를 앱 전체에서 사용할 수 있게 합니다.
+        ChangeNotifierProvider(create: (context) => HistoryService()),
       ],
       // 'MyApp'이라는 앱의 가장 큰 부분을 'ThemeProvider'와 'LocaleProvider'와 함께 실행해요.
       child: const MyApp(),
@@ -97,121 +98,41 @@ class _InputScreenState extends State<InputScreen> {
   DateTime? _selectedDate;
   // 계산 결과를 보여줄지 말지를 정하는 스위치예요. 처음에는 꺼져 있어요.
   bool _showResults = false;
-  // 이전에 입력했던 이름과 날짜들을 저장하는 목록이에요. (최근 20개)
-  List<Map<String, String>> _history = [];
-  InterstitialAd? _interstitialAd;
-  int _calculateClickCount = 0;
+
+  // 서비스 인스턴스
+  late final HistoryService _historyService;
+  late final AdService _adService;
 
   // 이 화면이 처음 만들어질 때 딱 한 번 실행되는 부분이에요.
   @override
   void initState() {
     super.initState(); // 부모 위젯의 시작 부분도 실행해줘요.
-    _loadHistory(); // 앱을 껐다 켜도 기억하고 있는 이전 기록들을 불러와요.
-    _loadCalculateClickCount();
-    _loadInterstitialAd();
+    // Provider를 통해 서비스 인스턴스를 가져옵니다.
+    _historyService = Provider.of<HistoryService>(context, listen: false);
+    _historyService.loadHistory(); // 기록 불러오기
+
+    _adService = AdService();
+    _adService.initialize(); // 광고 서비스 초기화
   }
 
   @override
   void dispose() {
-    _interstitialAd?.dispose();
+    _adService.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
-  void _loadInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId: 'ca-app-pub-7332476431820224/9337504089',
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
-          _interstitialAd = ad;
-          _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              _showResultScreenAfterAd();
-              ad.dispose();
-              _loadInterstitialAd();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              _showResultScreenAfterAd();
-              ad.dispose();
-              _loadInterstitialAd();
-            },
-          );
-        },
-        onAdFailedToLoad: (error) {
-          // Handle the error
-        },
-      ),
-    );
-  }
-
-  void _showResultScreenAfterAd() {
-    setState(() {
-      _showResults = true;
-    });
-    _saveHistory();
-  }
-
-  Future<void> _loadCalculateClickCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _calculateClickCount = prefs.getInt('calculateClickCount') ?? 0;
-    });
-  }
-
-  // 현재 _history 목록을 SharedPreferences에 저장하는 함수
-  Future<void> _persistHistory() async {
-    final prefs = await SharedPreferences.getInstance();
-    final historyString = _history.map((item) => json.encode(item)).toList();
-    await prefs.setStringList('history', historyString);
-  }
-
-  // 앱을 껐다 켜도 기억하고 있는 이전 기록들을 불러오는 함수예요.
-  Future<void> _loadHistory() async {
-    // 앱의 정보를 저장하는 도구를 가져와요.
-    final prefs = await SharedPreferences.getInstance();
-    // 'history'라는 이름으로 저장된 글자 목록을 가져와요. 없으면 빈 목록을 가져와요.
-    final historyString = prefs.getStringList('history') ?? [];
-    // 화면의 내용을 바꿔줘요.
-    setState(() {
-      // 가져온 글자 목록을 하나씩 읽어서 이름과 날짜 정보로 바꿔서 '_history' 목록에 저장해요.
-      _history = historyString
-          .map((item) => Map<String, String>.from(json.decode(item)))
-          .toList();
-    });
-  }
-
-  // 현재 입력된 이름과 날짜를 기록으로 저장하는 함수예요.
-  Future<void> _saveHistory() async {
-    // 앱의 정보를 저장하는 도구를 가져와요.
-    final prefs = await SharedPreferences.getInstance();
-    // 지금 입력된 이름과 날짜를 새로운 기록으로 만들어요.
+  // 결과 화면을 표시하고 기록을 저장하는 함수
+  void _showResultScreenAndSaveHistory() {
     final newEntry = {
       'name': _nameController.text,
       'date': _selectedDate!.toIso8601String(),
     };
+    _historyService.addOrUpdateEntry(newEntry);
 
-    // 똑같은 기록이 있으면 목록에서 지워요. (중복을 막기 위해서예요)
-    _history.removeWhere((item) => item['name'] == newEntry['name'] && item['date'] == newEntry['date']);
-    // 가장 최근 기록을 목록 맨 앞에 추가해요.
-    _history.insert(0, newEntry);
-
-    // 기록이 20개가 넘으면 가장 오래된 기록들을 지워서 20개만 남겨요.
-    if (_history.length > 20) {
-      _history = _history.sublist(0, 20);
-    }
-
-    // 기록 목록을 컴퓨터가 저장할 수 있는 글자 형태로 바꿔요.
-    final historyString = _history.map((item) => json.encode(item)).toList();
-    await prefs.setStringList('history', historyString); // 바꾼 글자 목록을 'history'라는 이름으로 앱에 저장해요.
-    // _loadHistory() 호출은 불필요합니다. setState가 UI를 업데이트합니다.
-  }
-
-  // 기록 목록에서 항목을 삭제하는 함수
-  void _deleteHistoryEntry(int index) async {
     setState(() {
-      _history.removeAt(index);
+      _showResults = true;
     });
-    await _persistHistory(); // 변경된 기록을 저장
   }
 
   // 생년월일을 선택하는 달력 화면을 보여주는 함수예요.
@@ -219,18 +140,12 @@ class _InputScreenState extends State<InputScreen> {
     // 달력 화면을 띄워서 사용자가 날짜를 고르게 해요.
     final DateTime? picked = await showDatePicker(
       context: context,
-      // 달력이 처음 열릴 때 보여줄 날짜예요. 이전에 선택한 날짜가 없으면 오늘 날짜를 보여줘요.
       initialDate: _selectedDate ?? DateTime.now(),
-      // 선택할 수 있는 가장 오래된 날짜예요.
       firstDate: DateTime(1900),
-      // 선택할 수 있는 가장 최근 날짜예요. (오늘 날짜)
       lastDate: DateTime.now(),
     );
-    // 만약 사용자가 날짜를 골랐고, 이전에 선택한 날짜와 다르면
     if (picked != null && picked != _selectedDate) {
-      // 화면의 내용을 바꿔줘요.
       setState(() {
-        // 선택한 날짜를 저장해요.
         _selectedDate = picked;
       });
     }
@@ -239,16 +154,12 @@ class _InputScreenState extends State<InputScreen> {
   void _calculate() async {
     // 이름 칸이 비어있지 않고, 날짜도 선택되어 있으면
     if (_nameController.text.isNotEmpty && _selectedDate != null) {
-      final prefs = await SharedPreferences.getInstance();
-      _calculateClickCount = (prefs.getInt('calculateClickCount') ?? 0) + 1;
-      await prefs.setInt('calculateClickCount', _calculateClickCount);
-  
-      //7번 클릭마다 광고를 보여줍니다.
-      if (_calculateClickCount % 7 == 0 && _interstitialAd != null) {
-        _interstitialAd!.show();
-      } else {
-        // 광고를 보지 않을 경우, 즉시 결과 화면으로 이동하고 기록을 저장합니다.
-        _showResultScreenAfterAd();
+      // 광고 표시 여부를 확인하고, 광고가 표시되지 않은 경우에만 즉시 결과 화면으로 이동
+      final adShown = await _adService.showAdIfNeeded(() {
+        _showResultScreenAndSaveHistory(); // 광고가 닫힌 후 실행될 콜백
+      });
+      if (!adShown) {
+        _showResultScreenAndSaveHistory(); // 광고가 없으면 바로 결과 표시
       }
     } else {
       // 이름이나 날짜가 입력되지 않았으면 작은 알림 메시지를 화면 아래에 보여줘요.
@@ -289,15 +200,12 @@ class _InputScreenState extends State<InputScreen> {
   // 기록 목록에서 항목을 눌렀을 때 실행되는 함수예요. 선택한 기록으로 입력 칸을 채우고, 기록을 맨 위로 올립니다.
   void _applyHistory(Map<String, String> entry) {
     // 화면의 내용을 바꿔줘요.
+    _historyService.addOrUpdateEntry(entry); // 기록을 업데이트 (최상단으로 이동)
     setState(() {
       // 선택한 기록의 이름을 이름 입력 칸에 넣어요.
       _nameController.text = entry['name']!;
       // 선택한 기록의 날짜를 날짜 선택 칸에 넣어요.
       _selectedDate = DateTime.parse(entry['date']!);
-      // 선택된 기록을 목록 맨 위로 이동 (가장 최근 기록으로 간주)
-      _history.removeWhere((item) => item['name'] == entry['name'] && item['date'] == entry['date']);
-      _history.insert(0, entry);
-      _persistHistory(); // 변경된 순서를 저장
     });
   }
 
@@ -320,6 +228,9 @@ class _InputScreenState extends State<InputScreen> {
   // 이 화면에 무엇을 그릴지 정하는 부분이에요.
   @override
   Widget build(BuildContext context) {
+    // HistoryService의 변경사항을 감지하여 UI를 다시 그립니다.
+    final history = context.watch<HistoryService>().history;
+
     // 화면에 보여줄 내용을 담을 변수예요.
     Widget bodyContent;
 
@@ -420,11 +331,11 @@ class _InputScreenState extends State<InputScreen> {
               // 기록들을 목록 형태로 보여줘요. 스크롤도 가능해요.
               child: ListView.builder(
                 // 기록 목록에 몇 개의 항목이 있는지 알려줘요.
-                itemCount: _history.length,
+                itemCount: history.length,
                 // 각 기록 항목을 어떻게 만들지 정해요.
                 itemBuilder: (context, index) {
                   // 현재 만들 기록 항목의 정보를 가져와요.
-                  final entry = _history[index];
+                  final entry = history[index];
                   // 입체적인 카드 형태로 기록 항목을 만듭니다.
                   return Card(
                     elevation: 4.0, // 카드의 그림자 깊이
@@ -438,7 +349,7 @@ class _InputScreenState extends State<InputScreen> {
                       onTap: () => _applyHistory(entry), // 항목을 누르면 입력 칸에 적용
                       // 오른쪽 끝에 입체적인 'X' 버튼을 추가합니다.
                       trailing: InkWell(
-                        onTap: () => _deleteHistoryEntry(index), // 누르면 삭제 함수 실행
+                        onTap: () => _historyService.deleteEntry(index), // 누르면 삭제 함수 실행
                         borderRadius: BorderRadius.circular(15), // 물결 효과를 위한 둥근 모서리
                         child: Container(
                           width: 30,

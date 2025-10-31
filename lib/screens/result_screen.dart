@@ -22,55 +22,19 @@ class ResultScreen extends StatelessWidget {
     final int birthdayNumber = calculator.calculateBirthdayNumber(birthDate);
 
     // --- 월수 계산을 위한 로직 추가 ---
-    // 현재 언어 코드 가져오기 (ko, en 등)
     final String languageCode = Localizations.localeOf(context).languageCode;
 
-    // 월별 텍스트를 생성하는 함수
     String getMonthText(int month) {
       if (languageCode == 'ko') {
         return '$month월수';
       } else {
-        const monthAbbreviations = [
-          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ];
-        // month는 1부터 시작하므로 인덱스로 사용하기 위해 1을 뺍니다.
+        const monthAbbreviations = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return monthAbbreviations[month - 1];
       }
     }
-    final int personalYearNumber =
-        calculator.calculatePersonalYearNumber(birthDate);
-    // 1. 개인 년수를 먼저 축약합니다 (예: 1)
-    final int reducedPersonalYear = calculator.reduceNumber(personalYearNumber);
-    // 2. 현재 년도를 가져옵니다 (예: 2025)
+    final List<int> monthNumbers = calculator.calculateAllPersonalMonths(birthDate);
+    final int reducedPersonalYear = calculator.calculatePersonalYearNumber(birthDate);
     final int currentYear = DateTime.now().year;
-
-    // 3. 12개월의 월수를 계산합니다.
-    // ✨ [수정됨] 사용자의 요청(예: 11 -> 1+1 = 2)에 따라,
-    // 마스터 넘버(11, 22)를 포함한 모든 두 자리 수를 한 자리로 축약합니다.
-    final List<int> monthNumbers = [];
-    for (int month = 1; month <= 12; month++) {
-      int sum = reducedPersonalYear + month;
-
-      // 수가 9보다 클 경우 (즉, 두 자리 수 이상일 경우)
-      // 한 자리가 될 때까지 각 자리수를 계속 더합니다.
-      while (sum > 9) {
-        int newSum = 0;
-        int tempNum = sum;
-        while (tempNum > 0) {
-          newSum += tempNum % 10; // 1의 자리 숫자 더하기
-          tempNum = tempNum ~/ 10; // 10의 자리 숫자를 1의 자리로 만들기
-        }
-        sum = newSum;
-        // 예: sum = 19 -> newSum = 1+9=10 -> sum=10
-        // (바깥쪽 while문) sum = 10 > 9 이므로 다시 반복
-        // 예: sum = 10 -> newSum = 1+0=1 -> sum=1
-        // (바깥쪽 while문) sum = 1 <= 9 이므로 종료.
-      }
-
-      monthNumbers.add(sum);
-    }
-    // ---------------------------------
 
     return Padding(
       padding: const EdgeInsets.all(16.0),

@@ -261,6 +261,34 @@ class NumerologyCalculator {
         return birthDate.day;
       }
 
+      // 12개월의 월수를 계산하는 함수
+      List<int> calculateAllPersonalMonths(DateTime birthDate) {
+        final int personalYearNumber = calculatePersonalYearNumber(birthDate);
+        // 개인 년수를 먼저 축약합니다.
+        final int reducedPersonalYear = _reduceToSingleDigit(personalYearNumber);
+
+        final List<int> monthNumbers = [];
+        for (int month = 1; month <= 12; month++) {
+          int sum = reducedPersonalYear + month;
+
+          // 수가 9보다 클 경우 (즉, 두 자리 수 이상일 경우)
+          // 한 자리가 될 때까지 각 자리수를 계속 더합니다.
+          while (sum > 9) {
+            int newSum = 0;
+            int tempNum = sum;
+            while (tempNum > 0) {
+              newSum += tempNum % 10; // 1의 자리 숫자 더하기
+              tempNum = tempNum ~/ 10; // 10의 자리 숫자를 1의 자리로 만들기
+            }
+            sum = newSum;
+          }
+
+          monthNumbers.add(sum);
+        }
+        return monthNumbers;
+      }
+
+
   // 숫자의 전체 축소 경로를 반환하는 헬퍼 함수
   List<int> _getReductionPath(int number) {
     List<int> path = [number];
