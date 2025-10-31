@@ -9,7 +9,6 @@ class ResultScreen extends StatelessWidget {
   const ResultScreen({super.key, required this.name, required this.birthDate});
 
   @override
-  @override
   Widget build(BuildContext context) {
     final NumerologyCalculator calculator = NumerologyCalculator();
 
@@ -23,6 +22,22 @@ class ResultScreen extends StatelessWidget {
     final int birthdayNumber = calculator.calculateBirthdayNumber(birthDate);
 
     // --- 월수 계산을 위한 로직 추가 ---
+    // 현재 언어 코드 가져오기 (ko, en 등)
+    final String languageCode = Localizations.localeOf(context).languageCode;
+
+    // 월별 텍스트를 생성하는 함수
+    String getMonthText(int month) {
+      if (languageCode == 'ko') {
+        return '$month월수';
+      } else {
+        const monthAbbreviations = [
+          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+        // month는 1부터 시작하므로 인덱스로 사용하기 위해 1을 뺍니다.
+        return monthAbbreviations[month - 1];
+      }
+    }
     final int personalYearNumber =
         calculator.calculatePersonalYearNumber(birthDate);
     // 1. 개인 년수를 먼저 축약합니다 (예: 1)
@@ -115,22 +130,22 @@ class ResultScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 리스트 인덱스는 0부터 시작 (0=1월, 1=2월, ...)
-                      Text('1월수 : ${monthNumbers[0]}',
+                      Text('${getMonthText(1)} : ${monthNumbers[0]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3), // 항목 간 여백 추가
-                      Text('2월수 : ${monthNumbers[1]}',
+                      Text('${getMonthText(2)} : ${monthNumbers[1]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
-                      Text('3월수 : ${monthNumbers[2]}',
+                      Text('${getMonthText(3)} : ${monthNumbers[2]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
-                      Text('4월수 : ${monthNumbers[3]}',
+                      Text('${getMonthText(4)} : ${monthNumbers[3]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
-                      Text('5월수 : ${monthNumbers[4]}',
+                      Text('${getMonthText(5)} : ${monthNumbers[4]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
-                      Text('6월수 : ${monthNumbers[5]}',
+                      Text('${getMonthText(6)} : ${monthNumbers[5]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                     ],
                   ),
@@ -140,26 +155,26 @@ class ResultScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('7월수 : ${monthNumbers[6]}',
+                      Text('${getMonthText(7)} : ${monthNumbers[6]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
-                      Text('8월수 : ${monthNumbers[7]}',
-                          style: Theme.of(context).textTheme.bodyLarge),
-                      const SizedBox(height: 3),
-      
-                      Text('9월수 : ${monthNumbers[8]}',
+                      Text('${getMonthText(8)} : ${monthNumbers[7]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
       
-                      Text('10월수 : ${monthNumbers[9]}',
+                      Text('${getMonthText(9)} : ${monthNumbers[8]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
       
-                      Text('11월수 : ${monthNumbers[10]}',
+                      Text('${getMonthText(10)} : ${monthNumbers[9]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 3),
       
-                      Text('12월수 : ${monthNumbers[11]}',
+                      Text('${getMonthText(11)} : ${monthNumbers[10]}',
+                          style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 3),
+      
+                      Text('${getMonthText(12)} : ${monthNumbers[11]}',
                           style: Theme.of(context).textTheme.bodyLarge),
                     ],
                   ),
