@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:numerology/services/history_service.dart';
 import 'package:numerology/services/ad_service.dart';
@@ -12,36 +13,43 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _isInitialized = false;
+
   @override
-  void initState() {
-    super.initState();
-    _initializeAndShowAd();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 초기화 로직이 한 번만 실행되도록 플래그로 제어합니다.
+    if (!_isInitialized) {
+      _isInitialized = true;
+      _initializeApp();
+    }
   }
 
-  Future<void> _initializeAndShowAd() async {
-    // 위젯 트리가 완전히 빌드된 후 context에 접근할 수 있도록 작은 지연을 줍니다.
-    await Future.delayed(Duration.zero);
+  // 메인 화면으로 이동하는 함수
+  void _navigateToMainScreen() {
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const InputScreen()),
+    );
+  }
 
+  Future<void> _initializeApp() async {
     // 1. HistoryService에서 기록 데이터를 백그라운드에서 로드합니다.
     await Provider.of<HistoryService>(context, listen: false).loadHistory();
 
-    // 2. 스플래시 전면 광고를 로드하고 표시합니다.
-    final adService = AdService(); // 스플래시 전용 AdService 인스턴스 생성
-    await adService.loadAndShowSplashAd(
-      adUnitId: 'ca-app-pub-7332476431820224/9337504089', // 요청하신 광고 ID
-      onAdDismissed: () {
-        // 광고가 닫히면 메인 화면으로 이동합니다.
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const InputScreen()),
-        );
-      },
-      onAdFailed: () {
-        // 광고 로드 또는 표시에 실패해도 메인 화면으로 이동합니다.
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const InputScreen()),
-        );
-      },
-    );
+    // 2. 디버그 모드인지 확인합니다.
+    if (kDebugMode) {
+      // 디버그 모드일 경우: 광고를 건너뛰고 바로 메인 화면으로 이동
+      _navigateToMainScreen();
+    } else {
+      // 출시 모드일 경우: 스플래시 전면 광고를 로드하고 표시
+      final adService = AdService();
+      await adService.loadAndShowSplashAd(
+        adUnitId: 'ca-app-pub-7332476431820224/9337504089',
+        onAdDismissed: _navigateToMainScreen, // 광고가 닫히면 메인으로 이동
+        onAdFailed: _navigateToMainScreen, // 광고 실패 시에도 메인으로 이동
+      );
+    }
   }
 
   @override
