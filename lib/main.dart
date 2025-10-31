@@ -12,6 +12,7 @@ import 'package:numerology/theme_provider.dart'; // 앱의 테마(밝은 모드,
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:numerology/services/ad_service.dart';
 import 'package:numerology/services/history_service.dart';
+import 'package:numerology/screens/splash_screen.dart'; // 스플래시 화면 임포트
 
 // 앱이 처음 시작될 때 가장 먼저 실행되는 부분이에요.
 void main() {
@@ -72,7 +73,7 @@ class MyApp extends StatelessWidget {
           // 현재 앱의 언어는 'localeProvider'에서 가져와요.
           locale: localeProvider.locale,
           // 앱이 처음 시작될 때 보여줄 화면은 'InputScreen'이에요.
-          home: const InputScreen(),
+          home: const SplashScreen(), // 시작 화면을 SplashScreen으로 변경
         );
       },
     );

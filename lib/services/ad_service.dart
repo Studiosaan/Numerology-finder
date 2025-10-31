@@ -17,7 +17,7 @@ class AdService {
 
   /// 전면 광고를 로드합니다.
   void _loadInterstitialAd() {
-    InterstitialAd.load(
+    InterstitialAd.load( // 이전에 설정된 일반 전면 광고 로드
       adUnitId: 'ca-app-pub-7332476431820224/9337504089', // 실제 광고 ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
@@ -55,6 +55,38 @@ class AdService {
       return true; // 광고가 표시됨
     }
     return false; // 광고가 표시되지 않음
+  }
+
+  /// 스플래시 화면에서 사용할 전면 광고를 로드하고 표시합니다.
+  Future<void> loadAndShowSplashAd({
+    required String adUnitId,
+    required Function onAdDismissed,
+    required Function onAdFailed,
+  }) async {
+    InterstitialAd? splashAd;
+    await InterstitialAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          splashAd = ad;
+          splashAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              onAdDismissed(); // 광고가 닫히면 콜백 실행
+              ad.dispose();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              onAdFailed(); // 광고 표시에 실패하면 콜백 실행
+              ad.dispose();
+            },
+          );
+          splashAd!.show(); // 광고 표시
+        },
+        onAdFailedToLoad: (error) {
+          onAdFailed(); // 광고 로드에 실패하면 콜백 실행
+        },
+      ),
+    );
   }
 
   Future<void> _loadCalculateClickCount() async {
