@@ -158,6 +158,13 @@ class _InputScreenState extends State<InputScreen> {
     });
   }
 
+  // 현재 _history 목록을 SharedPreferences에 저장하는 함수
+  Future<void> _persistHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyString = _history.map((item) => json.encode(item)).toList();
+    await prefs.setStringList('history', historyString);
+  }
+
   // 앱을 껐다 켜도 기억하고 있는 이전 기록들을 불러오는 함수예요.
   Future<void> _loadHistory() async {
     // 앱의 정보를 저장하는 도구를 가져와요.
@@ -195,9 +202,16 @@ class _InputScreenState extends State<InputScreen> {
 
     // 기록 목록을 컴퓨터가 저장할 수 있는 글자 형태로 바꿔요.
     final historyString = _history.map((item) => json.encode(item)).toList();
-    // 바꾼 글자 목록을 'history'라는 이름으로 앱에 저장해요.
-    await prefs.setStringList('history', historyString);
-    _loadHistory(); // 기록을 다시 불러와서 화면에 바로 보이게 해요.
+    await prefs.setStringList('history', historyString); // 바꾼 글자 목록을 'history'라는 이름으로 앱에 저장해요.
+    // _loadHistory() 호출은 불필요합니다. setState가 UI를 업데이트합니다.
+  }
+
+  // 기록 목록에서 항목을 삭제하는 함수
+  void _deleteHistoryEntry(int index) async {
+    setState(() {
+      _history.removeAt(index);
+    });
+    await _persistHistory(); // 변경된 기록을 저장
   }
 
   // 생년월일을 선택하는 달력 화면을 보여주는 함수예요.
@@ -222,17 +236,18 @@ class _InputScreenState extends State<InputScreen> {
     }
   }
 
-  // 'Calculate' 버튼을 눌렀을 때 실행되는 함수예요.
   void _calculate() async {
     // 이름 칸이 비어있지 않고, 날짜도 선택되어 있으면
     if (_nameController.text.isNotEmpty && _selectedDate != null) {
       final prefs = await SharedPreferences.getInstance();
       _calculateClickCount = (prefs.getInt('calculateClickCount') ?? 0) + 1;
       await prefs.setInt('calculateClickCount', _calculateClickCount);
-
-      if (_calculateClickCount % 15 == 0 && _interstitialAd != null) {
+  
+      //7번 클릭마다 광고를 보여줍니다.
+      if (_calculateClickCount % 7 == 0 && _interstitialAd != null) {
         _interstitialAd!.show();
       } else {
+        // 광고를 보지 않을 경우, 즉시 결과 화면으로 이동하고 기록을 저장합니다.
         _showResultScreenAfterAd();
       }
     } else {
@@ -271,7 +286,7 @@ class _InputScreenState extends State<InputScreen> {
     );
   }
 
-  // 기록 목록에서 항목을 눌렀을 때 실행되는 함수예요. 선택한 기록으로 입력 칸을 채워줘요.
+  // 기록 목록에서 항목을 눌렀을 때 실행되는 함수예요. 선택한 기록으로 입력 칸을 채우고, 기록을 맨 위로 올립니다.
   void _applyHistory(Map<String, String> entry) {
     // 화면의 내용을 바꿔줘요.
     setState(() {
@@ -279,6 +294,10 @@ class _InputScreenState extends State<InputScreen> {
       _nameController.text = entry['name']!;
       // 선택한 기록의 날짜를 날짜 선택 칸에 넣어요.
       _selectedDate = DateTime.parse(entry['date']!);
+      // 선택된 기록을 목록 맨 위로 이동 (가장 최근 기록으로 간주)
+      _history.removeWhere((item) => item['name'] == entry['name'] && item['date'] == entry['date']);
+      _history.insert(0, entry);
+      _persistHistory(); // 변경된 순서를 저장
     });
   }
 
@@ -406,14 +425,39 @@ class _InputScreenState extends State<InputScreen> {
                 itemBuilder: (context, index) {
                   // 현재 만들 기록 항목의 정보를 가져와요.
                   final entry = _history[index];
-                  // 한 줄짜리 목록 항목을 만들어요.
-                  return ListTile(
-                    // 항목의 제목은 기록된 이름이에요.
-                    title: Text(entry['name']!),
-                    // 항목의 부제목은 기록된 날짜예요. 시간 부분은 빼고 날짜만 보여줘요.
-                    subtitle: Text(entry['date']!.split('T')[0]),
-                    // 항목을 누르면 해당 기록으로 입력 칸을 채워주는 함수를 실행해요.
-                    onTap: () => _applyHistory(entry),
+                  // 입체적인 카드 형태로 기록 항목을 만듭니다.
+                  return Card(
+                    elevation: 4.0, // 카드의 그림자 깊이
+                    margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 4.0), // 카드 간 여백
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0), // 모서리를 둥글게
+                    ),
+                    child: ListTile(
+                      title: Text(entry['name']!), // 항목의 제목은 기록된 이름
+                      subtitle: Text(entry['date']!.split('T')[0]), // 부제목은 날짜
+                      onTap: () => _applyHistory(entry), // 항목을 누르면 입력 칸에 적용
+                      // 오른쪽 끝에 입체적인 'X' 버튼을 추가합니다.
+                      trailing: InkWell(
+                        onTap: () => _deleteHistoryEntry(index), // 누르면 삭제 함수 실행
+                        borderRadius: BorderRadius.circular(15), // 물결 효과를 위한 둥근 모서리
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor, // 배경색
+                            shape: BoxShape.circle, // 원형 모양
+                            boxShadow: [ // 입체감을 위한 그림자
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                spreadRadius: 1,
+                                blurRadius: 3,
+                              ),
+                            ],
+                          ),
+                          child: Icon(Icons.close, size: 18, color: Colors.grey[600]),
+                        ),
+                      ),
+                    ),
                   );
                 },
               ),
