@@ -13,10 +13,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:numerology/services/ad_service.dart';
 import 'package:numerology/services/history_service.dart';
 import 'package:numerology/screens/splash_screen.dart'; // 스플래시 화면 임포트
-import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:in_app_review/in_app_review.dart';
-
 
 // 앱이 처음 시작될 때 가장 먼저 실행되는 부분이에요.
 void main() {
@@ -70,7 +69,8 @@ class MyApp extends StatelessWidget {
           // 앱의 언어 설정을 관리하는 도구들을 등록해요.
           localizationsDelegates: const [
             AppLocalizations.delegate, // 앱에서 사용하는 문자열들을 관리하는 도구
-            GlobalMaterialLocalizations.delegate, // Material Design 위젯의 문자열들을 관리하는 도구
+            GlobalMaterialLocalizations
+                .delegate, // Material Design 위젯의 문자열들을 관리하는 도구
             GlobalWidgetsLocalizations.delegate, // 위젯의 문자열들을 관리하는 도구
             GlobalCupertinoLocalizations.delegate, // iOS 스타일 위젯의 문자열들을 관리하는 도구
           ],
@@ -159,7 +159,7 @@ class _InputScreenState extends State<InputScreen> {
   void _showResultScreenAndSaveHistory() {
     final newEntry = {
       'name': _nameController.text,
-      'date': _selectedDate!.toIso8601String(),
+      'date': _selectedDate?.toIso8601String() ?? '',
     };
     _historyService.addOrUpdateEntry(newEntry);
 
@@ -185,8 +185,8 @@ class _InputScreenState extends State<InputScreen> {
   }
 
   void _calculate() async {
-    // 이름 칸이 비어있지 않고, 날짜도 선택되어 있으면
-    if (_nameController.text.isNotEmpty && _selectedDate != null) {
+    // 이름 칸이 비어있지 않으면 (날짜는 없어도 됨)
+    if (_nameController.text.isNotEmpty) {
       // 광고 표시 여부를 확인하고, 광고가 표시되지 않은 경우에만 즉시 결과 화면으로 이동
       final adShown = await _adService.showAdIfNeeded(() {
         _showResultScreenAndSaveHistory(); // 광고가 닫힌 후 실행될 콜백
@@ -195,10 +195,12 @@ class _InputScreenState extends State<InputScreen> {
         _showResultScreenAndSaveHistory(); // 광고가 없으면 바로 결과 표시
       }
     } else {
-      // 이름이나 날짜가 입력되지 않았으면 작은 알림 메시지를 화면 아래에 보여줘요.
+      // 이름이 입력되지 않았으면 작은 알림 메시지를 화면 아래에 보여줘요.
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.pleaseEnterNameAndBirthDate), // 알림 메시지 내용이에요.
+          content: Text(
+            AppLocalizations.of(context)!.pleaseEnterNameAndBirthDate,
+          ), // 알림 메시지 내용이에요.
         ),
       );
     }
@@ -238,7 +240,11 @@ class _InputScreenState extends State<InputScreen> {
       // 선택한 기록의 이름을 이름 입력 칸에 넣어요.
       _nameController.text = entry['name']!;
       // 선택한 기록의 날짜를 날짜 선택 칸에 넣어요.
-      _selectedDate = DateTime.parse(entry['date']!);
+      if (entry['date'] != null && entry['date']!.isNotEmpty) {
+        _selectedDate = DateTime.parse(entry['date']!);
+      } else {
+        _selectedDate = null;
+      }
     });
   }
 
@@ -252,37 +258,41 @@ class _InputScreenState extends State<InputScreen> {
     } else {
       final bool? shouldPop = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text('정말 나가시겠습니까?'),
-          content: (_isNativeAdLoaded && _nativeAd != null)
-              ? ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxHeight: 300, // Adjust height as needed
-                  ),
-                  child: AdWidget(ad: _nativeAd!),
-                )
-              : const SizedBox.shrink(),
-          actions: [
-            TextButton(
-              onPressed: () => SystemNavigator.pop(),
-              child: Text('종료'),
+        builder:
+            (context) => AlertDialog(
+              title: Text('정말 나가시겠습니까?'),
+              content:
+                  (_isNativeAdLoaded && _nativeAd != null)
+                      ? ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: 300, // Adjust height as needed
+                        ),
+                        child: AdWidget(ad: _nativeAd!),
+                      )
+                      : const SizedBox.shrink(),
+              actions: [
+                TextButton(
+                  onPressed: () => SystemNavigator.pop(),
+                  child: Text('종료'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('취소'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                    InAppReview.instance.openStoreListing(
+                      appStoreId:
+                          'YOUR_APP_STORE_ID', // TODO: Add your App Store ID
+                      microsoftStoreId:
+                          'YOUR_MICROSOFT_STORE_ID', // TODO: Add your Microsoft Store ID
+                    );
+                  },
+                  child: Text('리뷰하기'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('취소'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-                InAppReview.instance.openStoreListing(
-                  appStoreId: 'YOUR_APP_STORE_ID', // TODO: Add your App Store ID
-                  microsoftStoreId: 'YOUR_MICROSOFT_STORE_ID', // TODO: Add your Microsoft Store ID
-                );
-              },
-              child: Text('리뷰하기'),
-            ),
-          ],
-        ),
       );
       return shouldPop ?? false;
     }
@@ -307,19 +317,22 @@ class _InputScreenState extends State<InputScreen> {
             // 'ResultScreen' 위젯을 만들어서 계산 결과를 보여줘요.
             ResultScreen(
               name: _nameController.text, // 현재 입력된 이름을 넘겨줘요.
-              birthDate: _selectedDate!, // 현재 선택된 날짜를 넘겨줘요.
+              birthDate: _selectedDate, // 현재 선택된 날짜를 넘겨줘요. (없으면 null)
             ),
             const SizedBox(height: 16), // 버튼 위 여백
             // 'Back' 버튼을 만들어요.
             ElevatedButton(
               onPressed: _showInputScreen, // 버튼을 누르면 입력 화면으로 돌아가는 함수를 실행해요.
-              child: Text(AppLocalizations.of(context)!.back), // 버튼에 'Back'이라고 써요.
+              child: Text(
+                AppLocalizations.of(context)!.back,
+              ), // 버튼에 'Back'이라고 써요.
             ),
             const SizedBox(height: 16), // 버튼 아래 여백
           ],
         ),
       );
-    } else { // 계산 결과를 보여주지 않고 입력 화면을 보여줄 때
+    } else {
+      // 계산 결과를 보여주지 않고 입력 화면을 보여줄 때
       // 입력 화면 내용을 만들어요.
       bodyContent = Padding(
         // 화면 가장자리에 16만큼의 여백을 줘요.
@@ -334,7 +347,8 @@ class _InputScreenState extends State<InputScreen> {
             TextField(
               controller: _nameController, // 이 칸의 글씨는 '_nameController'가 관리해요.
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.name, // 칸 위에 'Name'이라고 써줘요.
+                labelText:
+                    AppLocalizations.of(context)!.name, // 칸 위에 'Name'이라고 써줘요.
               ),
             ),
             // 칸 아래에 20만큼의 빈 공간을 만들어요.
@@ -356,8 +370,12 @@ class _InputScreenState extends State<InputScreen> {
                 ),
                 // 날짜를 선택하는 버튼을 만들어요.
                 TextButton(
-                  onPressed: () => _selectDate(context), // 버튼을 누르면 달력 화면을 보여주는 함수를 실행해요.
-                  child: Text(AppLocalizations.of(context)!.chooseDate), // 버튼에 'Choose Date'라고 써요.
+                  onPressed:
+                      () =>
+                          _selectDate(context), // 버튼을 누르면 달력 화면을 보여주는 함수를 실행해요.
+                  child: Text(
+                    AppLocalizations.of(context)!.chooseDate,
+                  ), // 버튼에 'Choose Date'라고 써요.
                 ),
               ],
             ),
@@ -372,12 +390,16 @@ class _InputScreenState extends State<InputScreen> {
                 // 'Calculate' 버튼을 만들어요.
                 ElevatedButton(
                   onPressed: _calculate, // 버튼을 누르면 계산하는 함수를 실행해요.
-                  child: Text(AppLocalizations.of(context)!.calculate), // 버튼에 'Calculate'라고 써요.
+                  child: Text(
+                    AppLocalizations.of(context)!.calculate,
+                  ), // 버튼에 'Calculate'라고 써요.
                 ),
                 // 'Reset' 버튼을 만들어요.
                 ElevatedButton(
                   onPressed: _clearInput, // 버튼을 누르면 입력 내용을 지우는 함수를 실행해요.
-                  child: Text(AppLocalizations.of(context)!.reset), // 버튼에 'Reset'이라고 써요.
+                  child: Text(
+                    AppLocalizations.of(context)!.reset,
+                  ), // 버튼에 'Reset'이라고 써요.
                   // 'Reset' 버튼의 색깔을 빨간색으로 정해요.
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent,
@@ -388,7 +410,10 @@ class _InputScreenState extends State<InputScreen> {
             // 버튼 아래에 20만큼의 빈 공간을 만들어요.
             const SizedBox(height: 20),
             // 'History'라는 제목을 보여줘요.
-            Text(AppLocalizations.of(context)!.history, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              AppLocalizations.of(context)!.history,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             // 기록 목록이 화면의 남은 공간을 모두 차지하도록 넓혀요.
             Expanded(
               // 기록들을 목록 형태로 보여줘요. 스크롤도 가능해요.
@@ -402,25 +427,41 @@ class _InputScreenState extends State<InputScreen> {
                   // 입체적인 카드 형태로 기록 항목을 만듭니다.
                   return Card(
                     elevation: 4.0, // 카드의 그림자 깊이
-                    margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 4.0), // 카드 간 여백
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 5.0,
+                      horizontal: 4.0,
+                    ), // 카드 간 여백
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0), // 모서리를 둥글게
                     ),
                     child: ListTile(
                       title: Text(entry['name']!), // 항목의 제목은 기록된 이름
-                      subtitle: Text(entry['date']!.split('T')[0]), // 부제목은 날짜
+                      subtitle: Text(
+                        (entry['date'] != null && entry['date']!.isNotEmpty)
+                            ? entry['date']!.split('T')[0]
+                            : 'No Date', // 날짜가 없으면 'No Date' 표시
+                      ), // 부제목은 날짜
                       onTap: () => _applyHistory(entry), // 항목을 누르면 입력 칸에 적용
                       // 오른쪽 끝에 입체적인 'X' 버튼을 추가합니다.
                       trailing: InkWell(
-                        onTap: () => _historyService.deleteEntry(index), // 누르면 삭제 함수 실행
-                        borderRadius: BorderRadius.circular(15), // 물결 효과를 위한 둥근 모서리
+                        onTap:
+                            () => _historyService.deleteEntry(
+                              index,
+                            ), // 누르면 삭제 함수 실행
+                        borderRadius: BorderRadius.circular(
+                          15,
+                        ), // 물결 효과를 위한 둥근 모서리
                         child: Container(
                           width: 30,
                           height: 30,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor, // 배경색
+                            color:
+                                Theme.of(
+                                  context,
+                                ).scaffoldBackgroundColor, // 배경색
                             shape: BoxShape.circle, // 원형 모양
-                            boxShadow: [ // 입체감을 위한 그림자
+                            boxShadow: [
+                              // 입체감을 위한 그림자
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.2),
                                 spreadRadius: 1,
@@ -428,7 +469,11 @@ class _InputScreenState extends State<InputScreen> {
                               ),
                             ],
                           ),
-                          child: Icon(Icons.close, size: 18, color: Colors.grey[600]),
+                          child: Icon(
+                            Icons.close,
+                            size: 18,
+                            color: Colors.grey[600],
+                          ),
                         ),
                       ),
                     ),
